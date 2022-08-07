@@ -6,6 +6,7 @@
 
 - [이은택](https://github.com/rudus1012)
 - [강현구](https://github.com/hyunx9)
+- [김지섭](https://github.com/Seopjikoji)
 
 ## 스터디 시간 및 장소
 
