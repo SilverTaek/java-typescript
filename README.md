@@ -5,6 +5,7 @@
 ## 팀원
 
 - [이은택](https://github.com/rudus1012)
+- [강현구](https://github.com/hyunx9)
 
 ## 스터디 시간 및 장소
 
@@ -40,6 +41,7 @@
 ### 4주차
 
 - 타입 설계
+- 담당자 : [강현구](https://github.com/hyunx9)
 
 ### 5주차
 
@@ -59,4 +61,4 @@
 ### 8주차
 
 - 타입스크립트로 마이그레이션하기
-- 담당자 :
+- 담당자 : [강현구](https://github.com/hyunx9)
