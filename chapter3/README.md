@@ -129,11 +129,23 @@ const v2 = {
   - Array.isArray를 통해서
   - 명시적 태그를 붙이는 것을 통해서, 태그된 유니온(tagged union, discriminated union)
   - 사용자 정의 타입 가드(만약 타입스크립트가 타입을 식별하지 못한다면, 커스텀 함수를 도입할 수 있음)
-- 분기문 외에도 여러 종류의 제어 프름을 살펴보며 타입스크립트가 타입을 좁히는 과정을 이해해야 합니다.
+- 분기문 외에도 여러 종류의 제어 흐름을 살펴보며 타입스크립트가 타입을 좁히는 과정을 이해해야 합니다.
 - 태그된/구별된 유니온과 사용자 정의 타입 가드를 사용하여 타입 좁히기 과정을 원활하게 만들 수 있습니다.
 
 ```typescript
+function isInputElement(el: HTMLElement): el is HTMLInputElement {
+  return 'value' in el;
+}
 
+function getElementContent(el: HTMLElement) {
+  if (isInputElement(el)) {
+    el; // Type is HTMLInputElement
+    return el.value;
+  }
+  el; // Type is HTMLElement
+  return el.textContent;
+}
+//사용자 정의 타입가드를 사용한 타입 좁히기
 ```
 
     편집기에서 타입을 조사하는 습관을 가지면 타입 좁히기가 어떻게 동작하는지 자연스레 익힐 수 있습니다.
