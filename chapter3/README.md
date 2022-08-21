@@ -143,11 +143,51 @@ const v2 = {
 ## 아이템23 한꺼번에 객체 생성하기
 
 - 속성을 제각각 추가하지 말고 한꺼번에 객체로 만들어야 합니다. 안전한 타입으로 속성을 추가하려면 객체 전체({...a, ...b})를 사용하면 됩니다.
+
+```typescript
+interface Point = { x: number, y: number }
+const pt: Point = {
+    x: 3,
+    y: 3
+}
+
+```
 - 객체에 조건부로 속성을 추가하는 방법을 익히도록 합니다.
+
+```typescript
+declare let hasMiddle: boolean;
+const firstLast = { first: 'Harry', lsat: 'Truman'};
+const president = { ... firstLast, ...(hasMiddle ? { middle: 'S' } : {})};
+
+```
 
 ## 아이템24 일관성 있는 별칭 사용하기
 
 - 별칭은 타입스크립트가 타입을 좁히는 것을 방해합니다. 따라서 변수에 별칭을 사용할 때는 일관되게 사용해야 합니다.
+
+```typescript
+interface Coordinate {
+  x: number;
+  y: number;
+}
+interface BoundingBox {
+  x: [number, number];
+  y: [number, number];
+}
+interface Polygon {
+  exterior: Coordinate[];
+  holes: Coordinate[];
+  bbox?: BoundingBox;
+}
+function isPointInpolygon(polygon: Polygon) {
+  const box = polygon.bbox;
+  if (polygon.bbox) {
+    polygon.bbox.x; // 정상
+    box.x; // Object is possibly 'undefined'.
+  }
+}
+
+```
 
 ## 아이템25 비동기 코드에는 콜백 대신 async 함수 사용하기
 
@@ -155,34 +195,137 @@ const v2 = {
 - 가능하면 프로미스를 생성하기 보다는 async와 await를 사용하는 것이 좋습니다. 간결하고 직관적인 코드를 작성할 수 있고 모든 종류의 오류를 제거할 수 있습니다.
 - 어떤 함수가 프로미스를 반환한다면 async로 선언하는 것이 좋습니다.
 
-## 아이템26 타입 추론에 문맥이 어껗게 사용되는지 이해하기
+```typescript
+// callback
+fetchURL(url1, function (res1) {
+  fetchURL(url2, function (res2) {
+    fetchURL(url3, function (res3) {
+      //
+    });
+  });
+});
+
+// promise
+const fetchPromise = fetch(url1);
+fetchPromise
+  .then((res1) => {
+    return fetch(url2);
+  })
+  .then((res2) => {
+    return fetch(url3);
+  })
+  .then((res3) => {
+    //
+  })
+  .catch((error) => {});
+
+// async/await
+async function fetchPages() {
+  try {
+    const res1 = await fetch(url1);
+    const res2 = await fetch(url2);
+    const res3 = await fetch(url3);
+  } catch (e) {}
+}
+
+```
+
+## 아이템26 타입 추론에 문맥이 어떻게 사용되는지 이해하기
 
 - 타입 추론에서 문맥이 어떻게 쓰이는지 주의해서 살펴봐야 합니다.
 - 변수를 뽑아서 별도로 선언했을 때 오류가 발생한다면 타입 선언을 추가해야 합니다.
 - 변수가 정말로 상수라면 단언(as const)을 사용해야 합니다. 그러나 상수 단언을 사용하면 정의한 곳이 아니라 사용한 곳에서 오류가 발생하므로 주의해야합니다.
+
+###튜플 사용 시 주의점
+```typescript
+function panTo(where: [number, number]) {}
+
+panTo([10, 20]); // 정상
+
+const loc = [10, 20];
+panTo(loc); // 'number[]' 형식의 인수는 '[number, number]' 형식의 매개변수에 할당될 수 없습니다.
+
+const loc: [number, number] = [10, 20];
+const loc = [10, 20] as const;
+
+function panTo(where: readonly [number, number]) {}
+
+const loc = [10, 20] as const;
+panTo(loc);
+```
+###객체 사용 시 주의점
+```typescript
+type Language = "javascript" | "typescript";
+interface GovernedLanguage {
+  language: Language;
+  organization: string;
+}
+
+function complain(language: GovernedLanguage) {}
+
+complain({ language: "typescript", organization: "Microsoft" }); // 정상
+
+const ts = { language: "typescript", organization: "Microsoft" };
+complain(ts);
+// 'string' 형식은 'Language' 형식에 할당할 수 없습니다.
+
+타입 선언을 추가하거나(const ts: GovernedLanguage = ...) 상수 단언(as const)을 사용해서 해결할 수 있다.
+```
+###콜백 사용 시 주의점
+```typescript
+function callWithRandomNumbers(fn: (n1: number, n2: number) => void) {
+  fn(Math.random(), Math.random());
+}
+
+callWithRandomNumbers((a, b) => {
+  a; // number
+  b; // number
+});
+
+const fn = (a, b) => {
+  // 'a', 'b' 매개변수에는 암시적으로 'any' 형식이 포함됩니다.
+};
+callWithRandomNumbers(fn);
+
+const fn = (a: number, b: number) => {};
+callWithRandomNumbers(fn);
+
+```
 
 ## 아이템27 함수형 기법과 라이브러리로 타입 흐름 유지하기
 
 - 타입 흐름을 개선하고, 가독성을 높이고, 명시적인 타입 구문의 필요성을 줄이기 위해 직접 구현하기 보다는 내장된 함수형 기법과 로대시 같은 유틸리티 라이브러리를 사용하는 것이 좋습니다.
 
 ```typescript
+const csvData = "...";
+const rawRows = csvData.split("\n");
+const headers = rawRows[0].split(",");
 
-```
+// 절차형
+const rows1 = rawRows.slice(1).map((rowStr) => {
+  const row = {};
+  rowStr.split(",").forEach((val, j) => {
+    row[headers[j]] = val;
+    // '{}' 형식에서 'string' 형식의 매개변수가 포함된 인덱스 시그니처를 찾을 수 없습니다.
+  });
+  return row;
+});
 
-집합의 관점에서, 타입 체커의 역할은 하나의 집합이 다른 집합의 부분 집합인지 검사하는 것입니다.
+// 함수형
+const rows2 = rawRows.slice(1).map(
+  (rowStr) =>
+    rowStr
+      .split(",")
+      .reduce((row, val, i) => ((row[headers[i]] = val), row), {})
+  // '{}' 형식에서 'string' 형식의 매개변수가 포함된 인덱스 시그니처를 찾을 수 없습니다.
+);
 
----
-
-값에 대한 `&`과 `keyof`의 동작에 대한 이해를 하기 위한 예시입니다.
-
-```typescript
-interface Person {
-  name: string;
-}
-interface Lifespan {
-  birth: Date;
-  death?: Date;
-}
+// 서드파티 라이브러리
+import _ from "lodash";
+const rows3 = rawRows
+  .slice(1)
+  .map((rowStr) => _.zipObject(headers, rowStr.split(",")));
+  // 타입이 _.Dictionary<string>[]
 ```
 
 # 개인 독후감
