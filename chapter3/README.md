@@ -134,7 +134,7 @@ const v2 = {
 
 ```typescript
 function isInputElement(el: HTMLElement): el is HTMLInputElement {
-  return 'value' in el;
+  return "value" in el;
 }
 
 function getElementContent(el: HTMLElement) {
@@ -164,13 +164,13 @@ const pt: Point = {
 }
 
 ```
+
 - 객체에 조건부로 속성을 추가하는 방법을 익히도록 합니다.
 
 ```typescript
 declare let hasMiddle: boolean;
-const firstLast = { first: 'Harry', lsat: 'Truman'};
-const president = { ... firstLast, ...(hasMiddle ? { middle: 'S' } : {})};
-
+const firstLast = { first: "Harry", lsat: "Truman" };
+const president = { ...firstLast, ...(hasMiddle ? { middle: "S" } : {}) };
 ```
 
 ## 아이템24 일관성 있는 별칭 사용하기
@@ -198,7 +198,6 @@ function isPointInpolygon(polygon: Polygon) {
     box.x; // Object is possibly 'undefined'.
   }
 }
-
 ```
 
 ## 아이템25 비동기 코드에는 콜백 대신 async 함수 사용하기
@@ -239,7 +238,6 @@ async function fetchPages() {
     const res3 = await fetch(url3);
   } catch (e) {}
 }
-
 ```
 
 ## 아이템26 타입 추론에 문맥이 어떻게 사용되는지 이해하기
@@ -249,6 +247,7 @@ async function fetchPages() {
 - 변수가 정말로 상수라면 단언(as const)을 사용해야 합니다. 그러나 상수 단언을 사용하면 정의한 곳이 아니라 사용한 곳에서 오류가 발생하므로 주의해야합니다.
 
 ###튜플 사용 시 주의점
+
 ```typescript
 function panTo(where: [number, number]) {}
 
@@ -265,7 +264,9 @@ function panTo(where: readonly [number, number]) {}
 const loc = [10, 20] as const;
 panTo(loc);
 ```
+
 ###객체 사용 시 주의점
+
 ```typescript
 type Language = "javascript" | "typescript";
 interface GovernedLanguage {
@@ -283,7 +284,9 @@ complain(ts);
 
 타입 선언을 추가하거나(const ts: GovernedLanguage = ...) 상수 단언(as const)을 사용해서 해결할 수 있다.
 ```
+
 ###콜백 사용 시 주의점
+
 ```typescript
 function callWithRandomNumbers(fn: (n1: number, n2: number) => void) {
   fn(Math.random(), Math.random());
@@ -301,7 +304,6 @@ callWithRandomNumbers(fn);
 
 const fn = (a: number, b: number) => {};
 callWithRandomNumbers(fn);
-
 ```
 
 ## 아이템27 함수형 기법과 라이브러리로 타입 흐름 유지하기
@@ -337,7 +339,7 @@ import _ from "lodash";
 const rows3 = rawRows
   .slice(1)
   .map((rowStr) => _.zipObject(headers, rowStr.split(",")));
-  // 타입이 _.Dictionary<string>[]
+// 타입이 _.Dictionary<string>[]
 ```
 
 # 개인 독후감
@@ -347,6 +349,8 @@ const rows3 = rawRows
 평소 타입 좁히기 그 중에서도 타입 가드에 대해서 어떻게 잘사용하는지 궁금했었다. 해당 장에서는 타입 넓히기, 좁히기, 타입 가드에 대해 다루고 있어서 관련 부분에 대한 도움을 받을 수 있었다. 이펙티브 타입스크립트에서 다뤄야하는 내용인지는 모르겠지만, 비동기 동기 관련 async await를 권장하는 내용도 있었다. 처음 업무를 하면서 코드가 로대시로 되어있어서 알아보기 어려웠지만 책에 기술된 것처럼 로대시나 내장 함수를 사용하면 코드를 보다 간결하게 사용할 수 있어서 가독성이 좋아지는 효과가 있는 것 같다.
 
 ## 김련호
+
+타입 구문을 얼마나 명시해야할지 고민이 많이 있었는데, 어느 정도 가이드라인이 생겼다는 것에 의미가 있었습니다. 그리고 팀에서 정해졌던 라이브러리 사용 및 지양 여부를 맹목적으로 생각하고 있었는데, 성능/사용성 간의 트레이트오프를 다시 생각해봐야겠다는 생각이 들었습니다.
 
 ## 강현구
 

@@ -440,3 +440,6 @@ function shouldUpdate(oldProp: ScatterProps, newProp: ScatterProps) {
 # 아젠다
 
 1. DTO를 작성할 때 `type`, `interface` 키워드를 사용하시나요? DTO 외에 `type`, `interface` 키워드를 사용할 때가 있나요?
+   이은택: class를 사용하고 공통적인 interface를 implements 하는 방식으로 되어 있음.
+   김련호: class를 사용하고 있고, base가되는 DTO 또한 class 를 사용하고 있음. Pick, Omit, Partial을 사용해서 Sub Type 개념으로 사용하고 있습니다.
+   이은택: class-validator가 type이나 interface에서 사용할 수 있을까? => 안되는 것 같습니다.
