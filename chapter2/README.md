@@ -429,6 +429,8 @@ function shouldUpdate(oldProp: ScatterProps, newProp: ScatterProps) {
 
 ## 김지섭
 
+전체적으로 분량이 많아 숙지하는데에 오래 걸렸고, 복습이 많이 필요해보였습니다. 한번에 읽으면서 이해가 가지 않았던 부분은 아이템 7 부분에서 타입의 인터섹션(intersection, 교집합)을 구하는 부분이었으며 이해하는데 시간이 조금 걸렸습니다. 그리고 아이템 13에서 기존에 불명확했던 타입과 인터페이스의 차이에 대해 명확하게 알게되어 도움이 많이 되었습니다.
+
 # 아젠다
 
 1. DTO를 작성할 때 `type`, `interface` 키워드를 사용하시나요? DTO 외에 `type`, `interface` 키워드를 사용할 때가 있나요?
