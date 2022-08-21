@@ -443,3 +443,4 @@ function shouldUpdate(oldProp: ScatterProps, newProp: ScatterProps) {
    이은택: class를 사용하고 공통적인 interface를 implements 하는 방식으로 되어 있음.
    김련호: class를 사용하고 있고, base가되는 DTO 또한 class 를 사용하고 있음. Pick, Omit, Partial을 사용해서 Sub Type 개념으로 사용하고 있습니다.
    이은택: class-validator가 type이나 interface에서 사용할 수 있을까? => 안되는 것 같습니다.
+   [공식문서](https://docs.nestjs.com/controllers#request-payloads)의 Controllers > Request payloads의 내용을 보면 JS로 변환될 때 interface와 같은 타입은 제거되기 때문에, 그리고 JS ES5부터 class가 표준으로 사용되기 때문에 런타임에서 파이프와 같은 기능을 사용하기 위해서는 class가 적절하고 권장한다는 내용이 있습니다.
