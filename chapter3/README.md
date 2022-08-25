@@ -359,8 +359,28 @@ const rows3 = rawRows
 
 ## 김지섭
 
+타입스크립트를 사용하면서 항상 어떻게 타입스크립트를 잘 사용할지 고민이 많이 되었는데 어느정도 이번 chapter3를 보면서 어떻게 실무에 적용할지에 대한 기준이 어느 정도 생긴 것 같았다.
+다른 장들도 같이 보면서 입체적으로 책을 읽어 나가야 겠다.
+편집기도 잘 활용하면 타입스크립트를 더 잘 사용할 수 있을 것 같다.
+
 # 아젠다
 
-1. lodash란 정학히 무엇일까 ?
-2. 타입 추론을 위해 타입이 바뀌는 변수는 되도록 피해야 하는데 어떤 상황에서 'let' 키워드가 사용될까?
-3.
+# 1. lodash란 정학히 무엇일까 ?
+### 공식문서 정의
+- A modern JavaScript utility library delivering modularity, performance & extras. 
+### 공식문서 상 왜 사용해야 하는가 ?
+- Lodash makes JavaScript easier by taking the hassle out of working with arrays, numbers, objects, strings, etc.
+Lodash’s modular methods are great for:
+  - Iterating arrays, objects, & strings
+  - Manipulating & testing values
+  - Creating composite functions
+### 결론
+  - 공식문서 상에는 어떤 용도로 어디에 사용하면 좋을지에 대해 명시되어 있지만 실제로 써보지 않으면 lodash를 왜 써야하는지에 대해서 감이 잘 오지 않을 수 있으므로 프로젝트에 투입하여 lodash를 사용해보면서 장단점을 파악하면 좋을 것 같다.
+
+# 2. 타입 추론을 위해 타입이 바뀌는 변수는 되도록 피해야 하는데 어떤 상황에서 'let' 키워드가 사용될까?
+- 되도록이면 const 키워드를 사용하여 변수를 사용하지만, 코드를 작성하는 과정 중에 변수가 바뀌어야할 필요가 있을 때 주로 사용한다.
+### 구글링을 통한 추가 정보
+- 자바스크립트의 다른 프로그래밍 언어와는 다르게 함수 레벨 스코프를 따르지만 let 키워드는 블록레벨 스코프를 따른다.
+- let 키워드를 통해 정의된 변수는 중복 선언 할 수 없습니다.(var 키워드와 대비됨)
+- let 키워드로 선언된 변수는 var 키워드로 선언된 변수와는 달리 선언문 이전에 참조하면 참조에러(ReferenceError)가 발생합니다. 이는 let으로 선언된 변수는 스코프의 시작에서 변수의 선언까지 일시적 사각지대(Temporal Dead Zone)에 빠지기 때문입니다.(var 키워드로 선언된 변수는 선언과 초기화가 동시에 이루어지지만, let 키워드로 선언된 변수는 선언과 초기화가 분리되어 진행됩니다.)
+
