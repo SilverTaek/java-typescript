@@ -12,44 +12,41 @@
 - 유효한 상태만 표현하는 타입을 지향해야 합니다. 코드가 길어지거나 표현하기 어렵지만 결국 시간은 절약하고 고통을 줄일 수 있습니다
 
 ### 잘못된 타입설계
+
 ```typescript
-
 interface State {
-    pageText: string;
-    isLoading: boolean;
-    error?: string;
-}
- 
-function renderPage(state: State){
- 
-    if(state.error){
-        return "Error! ~~";
-    } else if (state.isLoading){
-        return "Loading... ~~";
-    }
-    return `<h1>{currentPage}<h1>n${state.pageText}`;
-}
- 
-async function changePage(state: State, newPage: string){
- 
-    state.isLoading = true;
-    try{
-        const response = await fetch(getUrlForPage(newPage));
-        if(!response.ok){
-            throw new Error('Unable to ~~');
-        }
-        const text = await response.text();
-        state.isLoading = false;
-        state.pageText = text;
-    }catch(e){
-        state.error = '' + e;
-    }
- 
+  pageText: string;
+  isLoading: boolean;
+  error?: string;
 }
 
+function renderPage(state: State) {
+  if (state.error) {
+    return "Error! ~~";
+  } else if (state.isLoading) {
+    return "Loading... ~~";
+  }
+  return `<h1>{currentPage}<h1>n${state.pageText}`;
+}
+
+async function changePage(state: State, newPage: string) {
+  state.isLoading = true;
+  try {
+    const response = await fetch(getUrlForPage(newPage));
+    if (!response.ok) {
+      throw new Error("Unable to ~~");
+    }
+    const text = await response.text();
+    state.isLoading = false;
+    state.pageText = text;
+  } catch (e) {
+    state.error = "" + e;
+  }
+}
 ```
 
 위 코드의 문제점
+
 - 오류가 발생했을 때 state.isLoading을 false로 설정하는 로직이 빠져있습니다.
 - state.error를 초기화하지 않았기 때문에, 페이지 전환중에 로딩 메시지 대신 과거의 오류 메시지를 보여주게 됩니다.
 - 페이지 로딩중에 사용자가 페이지를 바꿔버리면 어떤 일이 벌어질지 예상하기 어렵습니다. 새 페이지에 오류가 뜨거나, 응답이 오는 순서에 따라 두 번째 페이지가 아닌 첫 번째 페이지로 전환될 수 있습니다.
@@ -59,61 +56,59 @@ async function changePage(state: State, newPage: string){
 State 타입은 isLoading이 true 이면서 동시에 error 값이 설정되는 무효한 상태를 허용합니다.
 
 ### 개선된 타입 설계
-```typescript
 
+```typescript
 interface RequestPending {
-    state: 'pending';
+  state: "pending";
 }
- 
+
 interface RequestError {
-    state: 'error';
-    error: string;
+  state: "error";
+  error: string;
 }
- 
+
 interface RequestSuccess {
-    state: 'ok';
-    pageText: string;
+  state: "ok";
+  pageText: string;
 }
- 
+
 type RequestState = RequestPending | RequestError | RequestSuccess;
- 
+
 interface State {
-    currentPage: string;
-    requests: {
-        [page: string]: RequestState;
-    }
+  currentPage: string;
+  requests: {
+    [page: string]: RequestState;
+  };
 }
- 
-function renderPage(state: State){
- 
-    const {currentPage} = state;
-    const requestState = state.request[currentPage];
- 
-    switch(requestState.state){
-        case 'pending':
-            return 'Loading ~~';
-        case 'error':
-            return 'Error!! ~~';
-        case 'ok':
-            return `<h1>{currentPage}<h1>\n${state.pageText}`;
-    }
+
+function renderPage(state: State) {
+  const { currentPage } = state;
+  const requestState = state.request[currentPage];
+
+  switch (requestState.state) {
+    case "pending":
+      return "Loading ~~";
+    case "error":
+      return "Error!! ~~";
+    case "ok":
+      return `<h1>{currentPage}<h1>\n${state.pageText}`;
+  }
 }
- 
-async function changePage(state: State, newPage: string){
- 
-    state.requests[newPage] = {state: 'pending'};
-    state.currentPage = newPage;
- 
-    try{
-        const response = await fetch(getUrlForPage(newPage));
-        if(!response.ok){
-            throw new Error('Unable to ~~');
-        }
-        const text = await response.text();
-        state.requests[newPage] = {state: 'ok', pageText};
-    }catch(e){
-        state.requests[newPage] = {state: 'error', error: '' + e};
+
+async function changePage(state: State, newPage: string) {
+  state.requests[newPage] = { state: "pending" };
+  state.currentPage = newPage;
+
+  try {
+    const response = await fetch(getUrlForPage(newPage));
+    if (!response.ok) {
+      throw new Error("Unable to ~~");
     }
+    const text = await response.text();
+    state.requests[newPage] = { state: "ok", pageText };
+  } catch (e) {
+    state.requests[newPage] = { state: "error", error: "" + e };
+  }
 }
 ```
 
@@ -124,10 +119,12 @@ renderPage와 changePage의 모호함은 완전히 사라졌습니다. 현재 �
 ## 아이템 29 사용할 때는 너그럽게, 생성할 때는 엄격하게
 
 ### 함수의 매개변수는 타입의 범위가 넓어도 되지만, 결과를 반환할 때는 일반적으로 타입의 범위가 더 구체적이어야 합니다.
+
 - 보통 매개변수 타입은 반환 타입에 비해 범위가 넓은 경향이 있습니다. 선택적 - 속성과 유니온 타입은 반환타입보다 매개변수 타입에 더 일반적입니다.
 - 매개변수와 반환 타입의 재사용을 위해서 기본 형태(반환 타입)와 느슨한 형태(매개변수 타입)을 도입하는 것이 좋습니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 interface CameraOptions {
     center?: LngLat;
@@ -135,26 +132,26 @@ interface CameraOptions {
     bearing?: number;
     pitch?: number;
 }
- 
+
 type LngLat =
     { lng: number, lat: number;} |
     { lon: number, lat: number;} |
     [number, number];
- 
+
 type LngLatBounds =
     { northest: LngLat, southest: LngLat} |
     [LngLat, LngLat] |
     [number, number, number, number]
- 
+
 declare function setCamera(camera: CameraOptions): void;
 declare function viewportForBounds(bounds: LngLatBounds): CameraOptions;
- 
+
 function focusOnFeature(f: Feature) {
- 
+
     const bounds = calculateBoundingBox(f);
     const camera = viewportForBounds(bounds);
     setCamera(camera);
- 
+
     const {center: {lat, lng}, zoom} = camera;
                  // ~~        ... 형식에 'lat' 속성이 없습니다.
                  // ~~        ... 형식에 'lng' 속성이 없습니다.
@@ -164,6 +161,7 @@ function focusOnFeature(f: Feature) {
 ```
 
 위 코드의 문제점
+
 - lat 과 lng 속성이 없고 zoom 속성만 존재
 - zoom의 타입이 number | undefined로 추론된다.
 
@@ -174,13 +172,14 @@ camera 값을 안전한 타입으로 사용하는 유일한 방법은 유니온 
 수많은 선택적 속성을 가지는 반환 타입과 유니온 타입은 viewportForBounds함수를 사용하기 어렵게 만듭니다.
 
 ### 개선된 타입설계
+
 ```typescript
 interface LngLat { lng: number; lat: number;};
 type LngLatLike =
     LngLat |
     {lon: number, lat: number} |
     [number, number]
- 
+
 interface Camera{
     center: LngLat;
     zoom: number;
@@ -190,29 +189,29 @@ interface Camera{
 interface CameraOptions extends Omit<Partial<Camera>, center>{
     center?: LngLatLike;
 }
- 
+
 interface CameraOptioins {
     center?: LngLatLike;
     zoom?: number;
     bearing?: number;
     pitch?: number;
 }
- 
+
 type LngLatBounds =
     { northeast: LngLatLike, southwest: LngLatLike } |
     [LngLatLike, LngLatLike] |
     [number, number, number, number]
- 
+
 declare function setCamera(camera: CameraOptions): void;
 declare function viewportForBounds(bounds: LatLngBounds): Camera;
- 
- 
+
+
 function focusOnFeature(f: Feature) {
- 
+
     const bounds = calculateBoundingBox(f);
     const camera = viewportForBounds(bounds);
     setCamera(camera);
- 
+
     const {center: {lat, lng}, zoom} = camera;  // 정상
     zoom;                                       // 타입이 number
     ....
@@ -226,46 +225,53 @@ Camera가 너무 엄격하므로 조건을 완화하여 느슨한 CameraOptions 
 ## 아이템 30 문서에 타입정보를 쓰지 않기
 
 ### 함수의 입력과 출력의 타입을 코드로 표현하는 것이 주석보다 더 나은 방법이라는 것은 자명합니다.
+
 - 주석과 변수명에 타입 정보를 적는 것은 피해야 합니다. 타입 선언이 중복되는 것으로 끝나면 다행이지만 최악의 경우는 타입 정보에 모순이 발생하게 됩니다.
 - 타입이 명확하지 않은 경우는 변수명에 단위 정보를 포함하는 것을 고려하는 것이 좋습니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 /**
-* 전경색(foreground) 문자열을 반환합니다.
-* 0개 또는 1개의 매개변수를 받습니다.
-* 매개변수가 없을 때는 표준 전경색을 반환합니다.
-* 매개변수가 있을 때는 특정 페이지의 전경색을 반환합니다.
-*/
-function getForegroundColor(page?: string){
-    return page === 'login' ? {r: 127, g: 127, b: 127} : {r:0, g:0, b:0};
+ * 전경색(foreground) 문자열을 반환합니다.
+ * 0개 또는 1개의 매개변수를 받습니다.
+ * 매개변수가 없을 때는 표준 전경색을 반환합니다.
+ * 매개변수가 있을 때는 특정 페이지의 전경색을 반환합니다.
+ */
+function getForegroundColor(page?: string) {
+  return page === "login" ? { r: 127, g: 127, b: 127 } : { r: 0, g: 0, b: 0 };
 }
- 
- 
+
 /** nums를 변경하지 않습니다 */
-function sort(nums: number[]) {/* ... */};
+function sort(nums: number[]) {
+  /* ... */
+}
 ```
 
 위 코드의 문제점
+
 - 코드의 주석 정보가 맞지 않습니다
-  
+
   함수가 string 형태의 색깔을 반환한다고 적혀있지만, 실제로는 {r, g, b} 객체를 반환합니다.
   주석에는 함수가 0개 혹은 1개의 매개변수를 받는다고 설명하고 있지만, 타입 시그니처만 보아도 명확하게 알 수 있는 정보입니다.
-  불필요하게 장황합니다. 함수 선언과  구현체보다 주석이 더 깁니다.
+  불필요하게 장황합니다. 함수 선언과 구현체보다 주석이 더 깁니다.
+
 - 값을 변경하지 않는다고 설명하는 주석도 좋지 않습니다.
 
 누군가 강제하지 않는 이상 주석은 코드와 동기화되지 않습니다. 그러나 타입 구문은 타입스크립트의 타입 체커가 타입 정보를 동기화하도록 강제합니다.
 주석 대신 타입 정보를 작성한다면 코드가 변경된다 하더라도 정보가 정확히 동기화됩니다.
 
 ### 개선된 타입설계
+
 ```typescript
 /** 애플리케이션 또는 특정 페이지의 전경색을 가져옵니다 */
-function getForegroundColor(page?: string) : Color {
-    // ...
+function getForegroundColor(page?: string): Color {
+  // ...
 }
- 
- 
-function sort(nums: readonly number[]) {/* ... */};
+
+function sort(nums: readonly number[]) {
+  /* ... */
+}
 ```
 
 특정 매개변수를 설명하고 싶다면 JSDoc의 @param 구문을 사용하면 됩니다.
@@ -276,46 +282,47 @@ function sort(nums: readonly number[]) {/* ... */};
 
 예를 들어 변수명을 ageNum으로 하는 것 보다 age를 변수명으로 하고, 그 타입이 number임을 명시하는게 좋습니다.
 
-그러나 단위가 있는 숫자들은 예외입니다.  단위가 무엇인지 확실하지 않다면 변수명 또는 속성 이름에 단위를 포함할 수 있습니다.
+그러나 단위가 있는 숫자들은 예외입니다. 단위가 무엇인지 확실하지 않다면 변수명 또는 속성 이름에 단위를 포함할 수 있습니다.
 
 예를 들어 timeMS는 time보다 훨씬 명확하고 temparatureC는 temparature보다 훨씬 명확합니다.
 
 ## 아이템 31 타입 주변에 null 값 배치하기
 
-### 값이 전부 null이거나 전부 null이 아닌 경우로 분명히 구분된다면 값이 섞여 있을 때보다 다루기 쉽습니다. 
+### 값이 전부 null이거나 전부 null이 아닌 경우로 분명히 구분된다면 값이 섞여 있을 때보다 다루기 쉽습니다.
 
 - 한 값의 null 여부가 다른 값의 null 여부에 암시적으로 관련되도록 설계하면 안 됩니다.
 - API 작성 시에는 반환 타입을 큰 객체로 만들고 반환 타입 전체가 null이거나 null이 아니게 만들어야 합니다. 사람과 타입 체커 모두에게 명료한 코드가 될 것 입니다.
 - 클래스를 만들 때는 필요한 모든 값이 준비되었을 때 생성하여 null이 존재하지 않도록 하는 것이 좋습니다.
-- strictNullChecks를 설정하면 코드에 많은 오류가 표시되겠지만, null 값과 관련된 문제점을 찾아낼 수 있기 때문에 반드시 필요합니다. 
+- strictNullChecks를 설정하면 코드에 많은 오류가 표시되겠지만, null 값과 관련된 문제점을 찾아낼 수 있기 때문에 반드시 필요합니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 function extent(nums: number[]) {
-    let min, max;
- 
-    for(const num of nums) {
-        if(!min){
-            min = num;
-            max = num;
-        } else {
-            min = Math.min(min, num);
-            max = Math.max(max, num);
-                        // ~~ 'number | undefined' 형식의 인수는 'number' 형식의 매개변수에 할당될 수 없습니다.
-        }
+  let min, max;
+
+  for (const num of nums) {
+    if (!min) {
+      min = num;
+      max = num;
+    } else {
+      min = Math.min(min, num);
+      max = Math.max(max, num);
+      // ~~ 'number | undefined' 형식의 인수는 'number' 형식의 매개변수에 할당될 수 없습니다.
     }
-     
-    return [min, max];
+  }
+
+  return [min, max];
 }
- 
+
 const [min, max] = extent([0, 1, 2]);
 const span = max - min;
-          // ~~    ~~ 개체가 'undefined'인 것 같습니다.
+// ~~    ~~ 개체가 'undefined'인 것 같습니다.
 ```
 
 위 코드의 문제점
 
-- 최솟값이나 최댓값이 0인 경우, 값이 덧씌워져 버립니다. 예를 들어 extent([0, 1, 2])의 결과는  [0, 2]가 아니라  [1, 2]가 됩니다.
+- 최솟값이나 최댓값이 0인 경우, 값이 덧씌워져 버립니다. 예를 들어 extent([0, 1, 2])의 결과는 [0, 2]가 아니라 [1, 2]가 됩니다.
 - nums 배열이 비어 있다면, 함수는 [undefined, undefined]를 반환합니다. undefined를 포함하는 객체는 다루기 어렵고 절대 권장하지 않습니다.
 
 이 코드는 타입 체커를 통과하고(strictNullCheck 없이), 반환타입은 number[]로 추론됩니다.
@@ -327,29 +334,29 @@ extent의 반환 타입이 (number | undefined)[]로 추론되어서 호출하�
 min과 max를 한 객체 안에 넣고 null 이거나 null이 아니게 하면 됩니다.
 
 ### 개선된 타입설계
+
 ```typescript
 function extent(nums: number[]) {
-    let result: [number, number] | null = null;
-     
-    for(const num of nums){
-        if(!result){
-            result = [num, num];
-        } else {
-            result = [Math.min(num, min), Math.max(num, max)];
-        }
+  let result: [number, number] | null = null;
+
+  for (const num of nums) {
+    if (!result) {
+      result = [num, num];
+    } else {
+      result = [Math.min(num, min), Math.max(num, max)];
     }
-     
-    return result;
+  }
+
+  return result;
 }
- 
+
 const [min, max] = extent([0, 1, 2])!;
 const span = max - min;
- 
- 
+
 const range = extent([0, 1, 2]);
-if(range){
-    const [min, max] = range;
-    const span = max - min;
+if (range) {
+  const [min, max] = range;
+  const span = max - min;
 }
 ```
 
@@ -360,60 +367,64 @@ if(!result)는 이제 제대로 동작합니다.
 null과 null이 아닌 값을 섞어서 사용하면 클래스에서도 문제가 생깁니다.
 
 ### 잘못된 타입설계
+
 ```typescript
-class UserPosts{
-    user: UserInfo | null;
-    posts: Post[] | null;
- 
-    constructor() {
-        this.user = null;
-        this.posts = null;
-    }
- 
-    async init(userId: string) {
-        return Promise.all([
-            async () => this.user = await fetchUser(userId),
-            async () => this.posts = await fetchPostsForUser(userId)
-        ]);
-    }
- 
-    getUserName() {
-        // ...
-    }
+class UserPosts {
+  user: UserInfo | null;
+  posts: Post[] | null;
+
+  constructor() {
+    this.user = null;
+    this.posts = null;
+  }
+
+  async init(userId: string) {
+    return Promise.all([
+      async () => (this.user = await fetchUser(userId)),
+      async () => (this.posts = await fetchPostsForUser(userId)),
+    ]);
+  }
+
+  getUserName() {
+    // ...
+  }
 }
 ```
+
 위 코드의 문제점
+
 - 두 번의 네트워크 요청이 로드되는 동안 user와 posts 속성은 null 상태입니다. 어떤 시점에는 둘 다 null 이거나, 둘 중 하나만 null 이거나, 둘 다 null이 아닐 것 입니다.
 
-속성값의 불확실성이  클래스의 모든 메서드에 나쁜 영향을 미칩니다.
+속성값의 불확실성이 클래스의 모든 메서드에 나쁜 영향을 미칩니다.
 
 결국 null 체크가 난무하고 버그를 양산하게 됩니다.
 
 필요한 데이터가 모두 준비된 후에 클래스를 만들도록 해야합니다.
 
 ### 개선된 타입설계
+
 ```typescript
-class UserPosts{
-    user: UserInfo;
-    posts: Post[];
- 
-    constructor(user: UserInfo, posts: Post[]) {
-        this.user = user;
-        this.posts = posts;
-    }
- 
-    static async init(userId: string) {
-        const [user, posts] = await Promise.all([
-            fetchUser(userId),
-            fetchPostsForUser(userId)
-            ]);
- 
-        return new User(user, posts);
-    }
- 
-    getUserName() {
-        return this.user.name;
-    }
+class UserPosts {
+  user: UserInfo;
+  posts: Post[];
+
+  constructor(user: UserInfo, posts: Post[]) {
+    this.user = user;
+    this.posts = posts;
+  }
+
+  static async init(userId: string) {
+    const [user, posts] = await Promise.all([
+      fetchUser(userId),
+      fetchPostsForUser(userId),
+    ]);
+
+    return new User(user, posts);
+  }
+
+  getUserName() {
+    return this.user.name;
+  }
 }
 ```
 
@@ -424,40 +435,44 @@ UserPosts 클래스는 완전히 null이 아니게 되었고, 메서드를 작�
 ## 아이템 32 유니온의 인터페이스보다는 인터페이스의 유니온 사용하기
 
 ### 유니온 타입의 속성을 가지는 인터페이스를 작성중이라면, 혹시 인터페이스의 유니온 타입을 사용하는 개 더 알맞지는 않을지 검토해 봐야 합니다.
+
 - 유니온 타입의 속성을 여러 개 가지는 인터페이스에서는 속성 간의 관계가 분명하지 않기 때문에 실수가 자주 발생하므로 주의해야 합니다.
 - 유니온의 인터페이스보다 인터페이스의 유니온이 더 정확하고 타입스크립트가 이해하기도 좋습니다.
 - 타입스크립트가 제어흐름을 분석할 수 있도록 타입에 태그를 넣는 것을 고려해야합니다. 태그된 유니온은 타입스크립트와 매우 잘 맞기 떄문에 자주 볼 수 있는 패턴입니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 interface Layer {
-    type: 'fill' | 'line' | 'point';
-    layout: FillLayout | LineLayout | PointLayout;
-    paint: FillPaint | LinePaint | PointPaint;
+  type: "fill" | "line" | "point";
+  layout: FillLayout | LineLayout | PointLayout;
+  paint: FillPaint | LinePaint | PointPaint;
 }
 ```
 
 위 코드의 문제점
+
 - type이 'fill' 타입이면서 paint 속성이 LinePaint 타입인 조합이 나올 수 있다.
 
 더 나은 방법으로 모델링 하기 위해서는 각각 타입의 계층을 분리된 인터페이스로 둬야합니다.
 
 ### 개선된 타입설계
+
 ```typescript
 interface FillLayer {
-    type: 'fill';
-    layout: FillLayout;
-    paint: FillPaint;
+  type: "fill";
+  layout: FillLayout;
+  paint: FillPaint;
 }
 interface LineLayout {
-    type: 'line';
-    layout: LineLayout;
-    paint: LineLayout;
+  type: "line";
+  layout: LineLayout;
+  paint: LineLayout;
 }
 interface PointLayer {
-    type: 'point';
-    layout: PointLayer;
-    paint: PointPaint;
+  type: "point";
+  layout: PointLayer;
+  paint: PointPaint;
 }
 ```
 
@@ -465,48 +480,49 @@ interface PointLayer {
 
 type속성은 '태그'이며 런타임에 어떤 타입의 Layer가 사용되는지 판단하는데 쓰입니다.
 
-
-
 태그된 유니온은 타입스크립트 타입 체커와 잘 맞기 때문에 타입스크립트 코드 어디에서나 찾을 수 있습니다.
 
-어떤 데이터 타입을  태그된 유니온으로 표현할 수 있다면 보통은 그렇게 하는 것이 좋습니다. 
+어떤 데이터 타입을 태그된 유니온으로 표현할 수 있다면 보통은 그렇게 하는 것이 좋습니다.
 
 또는 여러 개의 선택적 필드가 동시에 값이 있거나 동시에 undefined인 경우도 태그된 유니온 패턴과 잘 맞습니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 interface Person {
-    name: string;
-    // 다음은 둘 다 동시에 있거나 동시에 없습니다.
-    placeOfBirth?: string;
-    dateOfBirth?: Date;
+  name: string;
+  // 다음은 둘 다 동시에 있거나 동시에 없습니다.
+  placeOfBirth?: string;
+  dateOfBirth?: Date;
 }
 ```
 
 위 코드의 문제점
+
 - 타입 정보를 담고 있는 주석은 문제가 될 소지가 매우 높습니다. placeOfBirth와 dateOfBirth 필드는 실제로 관련되어 있지만, 타입 정보에는 어떠한 관계도 표현되지 않았습니다.
 
 ### 개선된 타입설계
+
 ```typescript
 /** 두 개의 속성을 하나의 객체로 모으는 것이 더 나은 설계입니다.*/
 interface Person {
-    name: string;
-    birth?: {
-        place: string;
-        date: Date;
-    }
+  name: string;
+  birth?: {
+    place: string;
+    date: Date;
+  };
 }
- 
+
 /** 타입의 구조를 손 댈 수 없는 상황이면, 앞서 다룬 인터페이스의 유니온을 사용해서 속성 사이의 관계를 모델링할 수 있습니다. */
-interface Name{
-    name: string;
+interface Name {
+  name: string;
 }
- 
-interface PersonWithBirth extends Name{
-    placeOfBirth: string;
-    dateOfBirth: Date;
+
+interface PersonWithBirth extends Name {
+  placeOfBirth: string;
+  dateOfBirth: Date;
 }
- 
+
 type Person = Name | PersonWithBirth;
 ```
 
@@ -521,21 +537,23 @@ type Person = Name | PersonWithBirth;
 - 객체의 속성 이름을 함수 매개변수로 받을 때는 string 보다 keyof T를 사용하는 것이 좋습니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 interface Album {
-    artist: string;
-    title: string;
-    releaseDate: string // YYYY-MM-DD
-    recordingType: string // 예를들어, "live" 혹은 "studio"
+  artist: string;
+  title: string;
+  releaseDate: string; // YYYY-MM-DD
+  recordingType: string; // 예를들어, "live" 혹은 "studio"
 }
- 
+
 const kindOfBlue: Album = {
-    artist: 'Miles Davis',
-    title: 'kind of blue',
-    releaseDate: 'August 17th, 1959',   // 날짜 형식이 다릅니다.
-    recordingType: 'Studio'             // 오타 (대문자 S)
+  artist: "Miles Davis",
+  title: "kind of blue",
+  releaseDate: "August 17th, 1959", // 날짜 형식이 다릅니다.
+  recordingType: "Studio", // 오타 (대문자 S)
 }; // 정상
 ```
+
 위 코드의 문제점
 
 - releaseDate 필드의 값은 주석에 설명된 형식과 다르다.
@@ -547,22 +565,23 @@ releaseDate 필드는 Date 객체를 사용해서 날짜 형식으로만 제한�
 recordType 필드는 'live'와 'studio' 단 두 개의 값으로 유니온 타입을 정의할 수 있습니다.
 
 ### 개선된 타입설계
+
 ```typescript
-type RecordingType = 'studio' | 'live';
- 
+type RecordingType = "studio" | "live";
+
 interface Album {
-    artist: string;
-    title: string;
-    releaseDate: Date;
-    recordingType: RecordingType;
+  artist: string;
+  title: string;
+  releaseDate: Date;
+  recordingType: RecordingType;
 }
- 
+
 const kindOfBlue: Album = {
-    artist: 'Miles Davis',
-    title: 'kind of blue',
-    releaseDate: new Date('1959-08-17'),
-    recordingType: 'Studio'
-//  ~~~~~~~~~~~~~ 'Studio' 형식은 'RecordingType'형식에 할당할 수 없습니다.
+  artist: "Miles Davis",
+  title: "kind of blue",
+  releaseDate: new Date("1959-08-17"),
+  recordingType: "Studio",
+  //  ~~~~~~~~~~~~~ 'Studio' 형식은 'RecordingType'형식에 할당할 수 없습니다.
 };
 ```
 
@@ -573,51 +592,47 @@ const kindOfBlue: Album = {
 - keyof 연산자로 더욱 세밀하게 객체의 속성 체크가 가능해집니다.
 
 ### keyof 연산자
+
 ```typescript
 /** 어떤 배열에서 한 필드의 값만 추출하는 함수 */
 function pluck(records, key) {
-    return records.map(r => r[key]);
+  return records.map((r) => r[key]);
 }
- 
- 
+
 /** 타입 체크가 되긴하지만, any 타입이 있어서 정밀하지 못함 */
-function pluck(records: any[], key: string): any[]{
-    return records.map(r => r[key]);
+function pluck(records: any[], key: string): any[] {
+  return records.map((r) => r[key]);
 }
- 
- 
+
 /**
-* 제너릭 타입을 도입해서 any를 없앰
-* key 타입이 string이지만 범위가 너무 넓어서 오류가 발생
-*/
-function pluck<T>(records: T[], key: string): any[]{
-    return records.map(r => r[key]);
+ * 제너릭 타입을 도입해서 any를 없앰
+ * key 타입이 string이지만 범위가 너무 넓어서 오류가 발생
+ */
+function pluck<T>(records: T[], key: string): any[] {
+  return records.map((r) => r[key]);
 }
- 
- 
+
 /**
-* keyof 연산자를 이용해 string의 범위를 좁힘
-* 타입 체커를 통과할 뿐 아니라, 반환 타입을 추론할 수 있음
-* key의 값으로 하나의 문자열을 넣게 되면, 범위가 너무 넓음
-*/
-function pluck<T>(records: T[], key: keyof T): T[keyof T][]{
-    return records.map(r => r[key]);
+ * keyof 연산자를 이용해 string의 범위를 좁힘
+ * 타입 체커를 통과할 뿐 아니라, 반환 타입을 추론할 수 있음
+ * key의 값으로 하나의 문자열을 넣게 되면, 범위가 너무 넓음
+ */
+function pluck<T>(records: T[], key: keyof T): T[keyof T][] {
+  return records.map((r) => r[key]);
 }
-const releaseDates = pluck(albums, 'releaseDate'); // 타입이 (string | Date)[]
- 
- 
+const releaseDates = pluck(albums, "releaseDate"); // 타입이 (string | Date)[]
+
 /**
-* 범위를 더 좁히기 위해서, keyof T의 부분집합으로 두번째 제너릭 매개변수를 도입
-*/
-function pluck<T, K extends keyof T>(records: T[], key: K): T[K][]{
-    return records.map(r => r[key]);
+ * 범위를 더 좁히기 위해서, keyof T의 부분집합으로 두번째 제너릭 매개변수를 도입
+ */
+function pluck<T, K extends keyof T>(records: T[], key: K): T[K][] {
+  return records.map((r) => r[key]);
 }
- 
-pluck(albums, 'releaseDate'); // 타입이 Date[]
-pluck(albums, 'artist'); // 타입이 string[]
-pluck(albums, 'recordingType'); // 타입이 RecordType[]
-pluck(albums, 'recordingDate'); // ~~~~~~~~~~~~~ "recordingDate" 형식의 인수는 ... 형식의 매개변수에 할당될 수 없습니다.
-        
+
+pluck(albums, "releaseDate"); // 타입이 Date[]
+pluck(albums, "artist"); // 타입이 string[]
+pluck(albums, "recordingType"); // 타입이 RecordType[]
+pluck(albums, "recordingDate"); // ~~~~~~~~~~~~~ "recordingDate" 형식의 인수는 ... 형식의 매개변수에 할당될 수 없습니다.
 ```
 
 ## 아이템 34 부정확한 타입보다는 미완성 타입을 사용하기
@@ -629,76 +644,76 @@ pluck(albums, 'recordingDate'); // ~~~~~~~~~~~~~ "recordingDate" 형식의 인�
 - 타입 정보를 구체적으로 만들 수록 오류 메시지와 자동 완성 기능에 주의를 기울여야 합니다. 정확도뿐만 아니라 개발 경험과도 관련됩니다.
 
 ### 잘못된 타입설계
+
 ```typescript
 /**
-* 책 184p
-* 1. 모두 허용
-* 2. 문자열, 숫자, 배열 허용
-* 3. 문자열, 숫자, 알려진 함수 이름으로 시작하는 배열 허용
-* 4. 각 함수가 받는 매개변수의 개수가 정확한지 확인
-* 5. 각 함수가 받는 매개변수의 타입이 정확한지 확인
-*/
- 
+ * 책 184p
+ * 1. 모두 허용
+ * 2. 문자열, 숫자, 배열 허용
+ * 3. 문자열, 숫자, 알려진 함수 이름으로 시작하는 배열 허용
+ * 4. 각 함수가 받는 매개변수의 개수가 정확한지 확인
+ * 5. 각 함수가 받는 매개변수의 타입이 정확한지 확인
+ */
+
 type Expression1 = any;
-type Expression2 = number | string | any[]
- 
+type Expression2 = number | string | any[];
+
 const tests: Expression2[] = [
-    10,
-    "red",
-    true, // (오류) 'true' 형식은 'Expression2' 형식에 할당할 수 없습니다.
-    ["case", [">", 20, 10], "red", "blue", "green"], // 값이 너무 많습니다.
-    ["**", 2, 31], // **은 함수가 아닙니다.
-    ["rgb", 255, 238, 64],
-    ["rgb", 255, 0, 127, 0] // 값이 너무 많습니다.
+  10,
+  "red",
+  true, // (오류) 'true' 형식은 'Expression2' 형식에 할당할 수 없습니다.
+  ["case", [">", 20, 10], "red", "blue", "green"], // 값이 너무 많습니다.
+  ["**", 2, 31], // **은 함수가 아닙니다.
+  ["rgb", 255, 238, 64],
+  ["rgb", 255, 0, 127, 0], // 값이 너무 많습니다.
 ];
- 
-type FnName = '+' | '-' | '*' | '/' | '>' | '<' | 'case' | 'rgb';
-type CallExpression = [FnName, ... any[]];
+
+type FnName = "+" | "-" | "*" | "/" | ">" | "<" | "case" | "rgb";
+type CallExpression = [FnName, ...any[]];
 type Expression3 = number | string | CallExpression;
- 
- 
+
 const tests: Expression3[] = [
-    10,
-    "red",
-    true, // (오류) 'true' 형식은 'Expression3' 형식에 할당할 수 없습니다.
-    ["case", [">", 20, 10], "red", "blue", "green"], // 값이 너무 많습니다.
-    ["**", 2, 31], // (오류) '**' 형식은 'FnName'형식에 할당할 수 없습니다.
-    ["rgb", 255, 238, 64],
-    ["rgb", 255, 0, 127, 0] // 값이 너무 많습니다.
+  10,
+  "red",
+  true, // (오류) 'true' 형식은 'Expression3' 형식에 할당할 수 없습니다.
+  ["case", [">", 20, 10], "red", "blue", "green"], // 값이 너무 많습니다.
+  ["**", 2, 31], // (오류) '**' 형식은 'FnName'형식에 할당할 수 없습니다.
+  ["rgb", 255, 238, 64],
+  ["rgb", 255, 0, 127, 0], // 값이 너무 많습니다.
 ];
- 
+
 type CallExpression = MathCall | CaseCall | RGBCall;
-type Expression4 = number | string | CallExpression
+type Expression4 = number | string | CallExpression;
 type MathCall = {
-    0: '+' | '-' | '*' | '/' | '>' | '<',
-    1: Expression4,
-    2: Expression4,
-    length: 3
+  0: "+" | "-" | "*" | "/" | ">" | "<";
+  1: Expression4;
+  2: Expression4;
+  length: 3;
 };
 type CaseCall = {
-    0: 'case',
-    1: Expression4,
-    2: Expression4,
-    3: Expression4,
-    length: 4 | 6 | 8 | 10 | 12 // 등등
+  0: "case";
+  1: Expression4;
+  2: Expression4;
+  3: Expression4;
+  length: 4 | 6 | 8 | 10 | 12; // 등등
 };
 type RGBCall = {
-    0: 'rgb',
-    1: Expression4,
-    2: Expression4,
-    3: Expression4,
-    length: 4;
-}
- 
+  0: "rgb";
+  1: Expression4;
+  2: Expression4;
+  3: Expression4;
+  length: 4;
+};
+
 /** 오류가 발생하면 엉뚱한 에러 메시지를 발생 */
 const tests: Expression4[] = [
-    10,
-    "red",
-    true, // (오류) 'true' 형식은 'Expression4' 형식에 할당할 수 없습니다.
-    ["case", [">", 20, 10], "red", "blue", "green"], // (오류) '['case',['>',...],...]' 형식은 string 형식에 할당할 수 없습니다.
-    ["**", 2, 31], // (오류) 'number' 형식은 'string'형식에 할당할 수 없습니다.
-    ["rgb", 255, 238, 64],
-    ["rgb", 255, 0, 127, 0] // (오류) 'number'형식은 'string' 형식에 할당할 수 업습니다.
+  10,
+  "red",
+  true, // (오류) 'true' 형식은 'Expression4' 형식에 할당할 수 없습니다.
+  ["case", [">", 20, 10], "red", "blue", "green"], // (오류) '['case',['>',...],...]' 형식은 string 형식에 할당할 수 없습니다.
+  ["**", 2, 31], // (오류) 'number' 형식은 'string'형식에 할당할 수 없습니다.
+  ["rgb", 255, 238, 64],
+  ["rgb", 255, 0, 127, 0], // (오류) 'number'형식은 'string' 형식에 할당할 수 업습니다.
 ];
 ```
 
@@ -712,9 +727,9 @@ const tests: Expression4[] = [
 ## 아이템 36 해당 분야의 용어로 타입 이름 짓기
 
 엄선된 타입, 속성, 변수의 이름은 의도를 명확히 하고 코드의 추상화 수준을 높혀줍니다.
+
 - 가독성을 높이고, 추상화 수준을 올리기 위해서 해당 분야의 용어를 사용해야합니다.
 - 같은 의미에 다른 이름을 붙이면 안 됩니다. 특별한 의미가 있을 때만 용어를 구분해야합니다.
-
 
 타입, 속성, 변수에 이름을 붙일 때 명심해야 할 세 가지 규칙이 있습니다.
 
@@ -733,36 +748,36 @@ interface Person {
   name: string
   age: number
 }
- 
+
 const printPerson = (person: Person) => {
   console.log(person)
 }
- 
+
 const jack = { name: 'Jack', age:  30 }
 const jaden = { name: 'Jaden', age: 35, rich: true }
- 
+
 printPerson(jack)   // OK
 printPerson(jaden)  // OK
- 
+
 ---
- 
+
 interface Person {
   _brand: 'PERSON'
   name: string
   age: number
 }
- 
+
 const printPerson = (person: Person) => {
   console.log(person)
 }
- 
+
 const createPerson = (name: string, age: number): Person => {
   return { name, age, _brand: 'PERSON' }
 }
- 
+
 const jack = createPerson('Jack', 30)
 const jaden = { name: 'Jaden', age: 35, rich: true }
- 
+
 printPerson(jack)   // OK
 printPerson(jaden)  // ERROR
 ```
@@ -772,6 +787,8 @@ printPerson(jaden)  // ERROR
 ## 이은택
 
 ## 김련호
+
+전체적으로 가벼은 팁에 관한 내용이였던 것 같습니다. 그 중에 아이템28, 33은 바로 실무에 적용해볼 수 있는 좋은 내용이였습니다. 특히 enum을 선언하여 많이 사용하고 있었는데, 굳이 enum이 반드시 필요한 사항이 아니라면 제한된 타입의 유니온 타입으로 사용하는 것이 더 간결하고 가벼워서, enum 타입의 사용을 많이 줄일 수 있을 것 같습니다.
 
 ## 강현구
 
