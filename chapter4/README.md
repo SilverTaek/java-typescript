@@ -808,7 +808,13 @@ enum 관련 이야기
 김련호 : typescript 에만 있는 기능들 중(e.g. enum, interface)에 해당 문법들이 자바스크립트 변환 과정 후
 로직을 확인해보면 즉시 실행 함수로 되어있는데 enum 은 꼭 필요하지 않으면 안 써도 되겠다고 생각했다.
 
-- 추가 공부 자료
+추가로 찾아본 자료입니다.
+
+###TypeScript enum을 사용하지 않는 게 좋은 이유를 Tree-shaking 관점에서 바라봅니다.
+
+## Tree-shaking은 무엇인가요?
+
+Tree-shaking이란 간단하게 말해 사용하지 않는 코드를 삭제하는 기능을 말합니다. 나무를 흔들면 죽은 잎사귀들이 떨어지는 모습에 착안해 Tree-shaking이라고 부릅니다. Tree-shaking을 통해 export했지만 아무 데서도 import하지 않은 모듈이나 사용하지 않는 코드를 삭제해서 번들 크기를 줄여 페이지가 표시되는 시간을 단축할 수 있습니다. 
 
 ```typescript
 export enum MOBILE_OS {
@@ -840,8 +846,5 @@ export var MOBILE_OS;
 })(MOBILE_OS || (MOBILE_OS = {}));
 ```
 JavaScript에 존재하지 않는 것을 구현하기 위해 TypeScript 컴파일러는 IIFE(즉시 실행 함수)를 포함한 코드를 생성합니다. 
-그런데 Rollup과 같은 번들러는 IIFE를 '사용하지 않는 코드'라고 판단할 수 없어서 Tree-shaking이 되지 않습니다. 결국 MOBILE_OS를 import하고 실제로는 사용하지 않더라도 최종 번들에는 포함되는 것입니다.
-
-##Tree-shaking은 무엇인가요?
-
-Tree-shaking이란 간단하게 말해 사용하지 않는 코드를 삭제하는 기능을 말합니다. 나무를 흔들면 죽은 잎사귀들이 떨어지는 모습에 착안해 Tree-shaking이라고 부릅니다. Tree-shaking을 통해 export했지만 아무 데서도 import하지 않은 모듈이나 사용하지 않는 코드를 삭제해서 번들 크기를 줄여 페이지가 표시되는 시간을 단축할 수 있습니다. 
+그런데 Rollup과 같은 번들러는 IIFE를 '사용하지 않는 코드'라고 판단할 수 없어서 `Tree-shaking`이 되지 않습니다. 
+결국 MOBILE_OS를 import하고 실제로는 사용하지 않더라도 최종 번들에는 포함되는 것입니다.
