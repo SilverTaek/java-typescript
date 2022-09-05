@@ -800,8 +800,8 @@ printPerson(jaden)  // ERROR
 
 # 아젠다
 
-* enum 이야기 조금 ..
-* Item 29에 엄격하게 작성한 타입이 오히려 가독성이 안좋지 않을까
+1. Item 29에 엄격하게 작성한 타입이 오히려 가독성이 안좋지 않을까
+2. enum 이야기로 스몰톡
 
 enum 관련 이야기
 
@@ -810,7 +810,7 @@ enum 관련 이야기
 
 추가로 찾아본 자료입니다.
 
-###TypeScript enum을 사용하지 않는 게 좋은 이유를 Tree-shaking 관점에서 바라봅니다.
+### TypeScript enum을 사용하지 않는 게 좋은 이유를 Tree-shaking 관점에서 바라봅니다.
 
 ## Tree-shaking은 무엇인가요?
 
