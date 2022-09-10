@@ -786,16 +786,19 @@ printPerson(jaden)  // ERROR
 
 ## 이은택
 
+해당 장은 꼭 타입스크립트에 한정되어 있는 장이라기 보다는 여러 언어를 사용하면서 알면 유용한 포인트들에 대해서 설명되어있는 장이여서 가볍게 읽었습니다. 이미 사용하고 있는 방법들이 책에 소개되어 있는 경우도 있어서 실제 개발했던 방법들과 비교하여 읽을 수 있었던 장이였습니다.
 
 ## 김련호
 
 전체적으로 가벼은 팁에 관한 내용이였던 것 같습니다. 그 중에 아이템28, 33은 바로 실무에 적용해볼 수 있는 좋은 내용이였습니다. 특히 enum을 선언하여 많이 사용하고 있었는데, 굳이 enum이 반드시 필요한 사항이 아니라면 제한된 타입의 유니온 타입으로 사용하는 것이 더 간결하고 가벼워서, enum 타입의 사용을 많이 줄일 수 있을 것 같습니다.
 
 ## 강현구
+
 타입을 어떤식으로 설계하면 좋을지 다양한 예제를 통해 꿀팁을 얻어가는 장 이었습니다. 특히 'string' 타입을 광범위하게 사용하고 있었는데
 요번 장을 보면서 좀 더 구체적인 타입으로 설계 및 사용하며 불 필요한 타입 추론 등의 비용을 줄일 수 있겠다 생각했습니다.
 
 ## 김지섭
+
 함수를 작성함에 있어 매개변수의 타입은 범위가 넓어질 수 있으나 함수가 반환하는 값은 매개변수의 타입에 비해서는 최대한 자세하고 명료하게 적어주는 것이 더 좋은 코드임을 알게되었다. 반환타입을 자세하고 명료하게 쓰기 위해 Omit, Partial 등의 유틸리티 타입을 이용할 수 있다. 또한 string 타입보다는 더 구체적인 타입을 사용하는 것이 더 좋은 코드임을 알게되었습니다. 데이터를 보지 않고 API 명세를 보고 타입을 생성하면 좋다는 것이 인상적이었습니다.
 
 # 아젠다
@@ -803,12 +806,11 @@ printPerson(jaden)  // ERROR
 1. Item 29에 엄격하게 작성한 타입이 오히려 가독성이 안좋지 않을까
 
 이은택 : 파샬이나 omit 같은 유틸리티 타입을 많이 활용했었는데, 제네릭을 많이 활용해본적은 없었다.
-        '백기선' 님의 코드 리뷰 중 제네릭을 통한 코드의 개선 할 수 있다는 내용을 봤었는데
-        상황에 따라 다를거같고 추후 시간을 내서 한번 찾아보면 좋을 것 같다.
+'백기선' 님의 코드 리뷰 중 제네릭을 통한 코드의 개선 할 수 있다는 내용을 봤었는데
+상황에 따라 다를거같고 추후 시간을 내서 한번 찾아보면 좋을 것 같다.
 
 김련호 : 내부에서 만드는 API는 타입 명세가 정해져 있기 때문에 제네릭을 사용하지 않고도 개발해왔었는데, 외부에 공개하는 라이브러리를 만드는 경우라면
 제네릭등을 사용해서 진행 할 것 같다.
-
 
 2. enum 이야기로 스몰톡
 
@@ -821,18 +823,18 @@ printPerson(jaden)  // ERROR
 
 ## Tree-shaking은 무엇인가요?
 
-Tree-shaking이란 간단하게 말해 사용하지 않는 코드를 삭제하는 기능을 말합니다. 나무를 흔들면 죽은 잎사귀들이 떨어지는 모습에 착안해 Tree-shaking이라고 부릅니다. Tree-shaking을 통해 export했지만 아무 데서도 import하지 않은 모듈이나 사용하지 않는 코드를 삭제해서 번들 크기를 줄여 페이지가 표시되는 시간을 단축할 수 있습니다. 
+Tree-shaking이란 간단하게 말해 사용하지 않는 코드를 삭제하는 기능을 말합니다. 나무를 흔들면 죽은 잎사귀들이 떨어지는 모습에 착안해 Tree-shaking이라고 부릅니다. Tree-shaking을 통해 export했지만 아무 데서도 import하지 않은 모듈이나 사용하지 않는 코드를 삭제해서 번들 크기를 줄여 페이지가 표시되는 시간을 단축할 수 있습니다.
 
 ```typescript
 export enum MOBILE_OS {
   IOS,
-  ANDROID
+  ANDROID,
 }
 
 // 문자열을 할당한 경우
 export enum MOBILE_OS {
-  IOS = 'iOS',
-  ANDROID = 'Android'
+  IOS = "iOS",
+  ANDROID = "Android",
 }
 ```
 
@@ -841,17 +843,18 @@ export enum MOBILE_OS {
 ```typescript
 export var MOBILE_OS;
 (function (MOBILE_OS) {
-    MOBILE_OS[MOBILE_OS["IOS"] = 0] = "IOS";
-    MOBILE_OS[MOBILE_OS["ANDROID"] = 1] = "ANDROID";
+  MOBILE_OS[(MOBILE_OS["IOS"] = 0)] = "IOS";
+  MOBILE_OS[(MOBILE_OS["ANDROID"] = 1)] = "ANDROID";
 })(MOBILE_OS || (MOBILE_OS = {}));
 
 // 문자열을 할당한 경우
 export var MOBILE_OS;
 (function (MOBILE_OS) {
-    MOBILE_OS["IOS"] = "iOS";
-    MOBILE_OS["ANDROID"] = "Android";
+  MOBILE_OS["IOS"] = "iOS";
+  MOBILE_OS["ANDROID"] = "Android";
 })(MOBILE_OS || (MOBILE_OS = {}));
 ```
-JavaScript에 존재하지 않는 것을 구현하기 위해 TypeScript 컴파일러는 IIFE(즉시 실행 함수)를 포함한 코드를 생성합니다. 
-그런데 Rollup과 같은 번들러는 IIFE를 '사용하지 않는 코드'라고 판단할 수 없어서 `Tree-shaking`이 되지 않습니다. 
+
+JavaScript에 존재하지 않는 것을 구현하기 위해 TypeScript 컴파일러는 IIFE(즉시 실행 함수)를 포함한 코드를 생성합니다.
+그런데 Rollup과 같은 번들러는 IIFE를 '사용하지 않는 코드'라고 판단할 수 없어서 `Tree-shaking`이 되지 않습니다.
 결국 MOBILE_OS를 import하고 실제로는 사용하지 않더라도 최종 번들에는 포함되는 것입니다.
