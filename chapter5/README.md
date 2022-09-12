@@ -97,15 +97,87 @@ function getLength(array: any[]) {
 
 ```typescript
 function range(start: number, limit: number) {
-  const out = []; //타입이 any[]
+  const out = []; // 타입이 any[]
   for(let i=start; i<limit; i++){
-    out.push(i); //out의 타입이 any
+    out.push(i); //  out의 타입이 any
   }
-  return out; //타입이 number[]
+  return out; // 타입이 number[]
 }
 ```
     일반적인 타입들은 정제되기만 하는 반면, 암시적 any와 any[] 타입은 진화할 수 있습니다. 이러한 동작이 발생하는 코드를 인지하고 이해할 수 있어야 합니다.
     any를 진화시키는 방식보다 명시적 타입 구문을 사용하는 것이 안전한 타입을 유지하는 방법입니다.
+
+## 아이템42 모르는 타입의 값에는 any 대신 unknown을 사용하기
+
+* 함수의 반환값과 관련된 형태
+```typescript
+function safeParseYAML(yaml: string): unknown {
+  return parseYAML(yaml);
+}
+```
+
+* 변수 선언과 관련된 형태
+```typescript
+interface Feature {
+id?: string | number;
+geometry : Geometry;
+property: unknown;
+}
+```
+
+* 단언문과 관련된 형태
+```typescript
+declare const foo: Foo;
+let barAny = foo as any as Bar;
+let barUnk = foo as unknown as Bar;
+```
+    unknown은 any 대신 사용할 수 있는 안전한 타입입니다. 어떠한 값이 있지만 그 타입을 알지 못하는 경우라면 unknown을 사용하면 됩니다.
+    사용자가 타입 단언문이나 타입 체크를 사용하도록 강제하려면 unknown을 사용하면 됩니다.
+    {}, object, unknown의 차이점을 이해해야 합니다.
+
+## 아이템43 몽키 패치보다는 안전한 타입을 사용하기
+
+* 자바스크립트에서는 임의로 객체와 클래스에 임의의 속성을 추가할 수 있다.
+```typescript
+window.monkey = 'Tamarin';
+document.monkey = 'Howler';
+```
+// 객체에 임의로 속성을 추가하는 것은 좋은 설계가 아님. 그렇기 때문에 다른 대안이 필요
+- any 단언문을 사용할 수 있지만, any를 사용함으로써 타입 안전성을 상실하고 언어 서비스를 사용할 수 없게 된다는 것
+- 대안 2가지
+1. interface의 특수 기능 중 하나인 보강(augmentation)을 사용
+
+```typescript
+interface Document {
+  monkey: string;
+}
+```
+
+2. 더 구체적인 타입 단언문 사용
+
+```typescript
+interface MonkeyDocument extends Document {
+  monkey: string;
+}
+```
+    전역 변수나 DOM에 데이터를 저장하지 말고, 데이터를 분리하여 사용해야 합니다.
+    내장 타입에 데이터를 저장해야 하는 경우, 안전한 타입 접근법 중 하나(보강이나 사용자 정의 인터페이스로 단언)를 사용해야 합니다.
+    보강의 모듈 영역 문제를 이해해야 합니다.
+
+## 아이템44 타입 커버리지를 추적하여 타입 안전성 유지하기
+
+any 타입이 여전히 프로그램 내에 존재할 수 있는 두 가지 경우
+1. 명시적 any 타입
+    * ex) any[], {[key: string]: any}
+2. 서드파티 타입 선언
+    * @types 선언 파일로부터 any 타입이 전파되는 경우, 가장 극단적인 예 - 전체 모듈에 any 타입을 부여하는 경우, declare module 'my-module'; → my-module 에서 어떤 것이든 오류 없이 임포트할 수 있다
+    * 타입에 버그가 있는 경우
+    * 선언된 타입과 실제 반환된 타입이 맞지 않는 경우
+
+    noImplicity가 설정되어 있어도, 명시작 any 또는 서드파티 타입 선언(@types)을 통해 any타입은 코드 내에 여전히 존재할 수 있다는 점을 주의해야 합니다.
+    작성한 프로그램의 타입이 얼마나 잘 선언되었는지 추적해야 합니다. 추적함으로써 any의 사용을 줄여 나갈 수 있고 타입 안전성을 꾸준히 높일 수 있습니다.
+
+
 
 # 개인 독후감
 
